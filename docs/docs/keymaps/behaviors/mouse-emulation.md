@@ -70,6 +70,8 @@ This example will send press of the fourth mouse button when the binding is trig
 &mkp MB4
 ```
 
+=================================================================
+
 ---
 title: Mouse Emulation Behaviors
 sidebar_label: Mouse Emulation
