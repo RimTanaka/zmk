@@ -8,6 +8,9 @@
 
 #include <dt-bindings/zmk/mouse.h>
 
+struct k_work_q *zmk_mouse_work_q();
+int zmk_mouse_init();
+
 typedef uint16_t zmk_mouse_button_flags_t;
 typedef uint16_t zmk_mouse_button_t;
 
@@ -24,6 +27,3 @@ struct vector2d {
     float x;
     float y;
 };
-
-// struct k_work_q *zmk_mouse_work_q();
-int zmk_mouse_init();
