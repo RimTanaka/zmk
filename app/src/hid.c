@@ -27,8 +27,8 @@ static uint8_t keys_held = 0;
 
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 
-static struct zmk_hid_mouse_report mouse_report = {.report_id = ZMK_HID_REPORT_ID_MOUSE,
-                                                   .body = {.buttons = 0}};
+static struct zmk_hid_mouse_report mouse_report = {
+    .report_id = 4, .body = {.buttons = 0, .x = 0, .y = 0, .scroll_x = 0, .scroll_y = 0}};
 
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
 
@@ -374,7 +374,7 @@ bool zmk_hid_is_pressed(uint32_t usage) {
 
 // Keep track of how often a button was pressed.
 // Only release the button if the count is 0.
-static int explicit_button_counts[5] = {0, 0, 0, 0, 0};
+static int explicit_button_counts[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static zmk_mod_flags_t explicit_buttons = 0;
 
 #define SET_MOUSE_BUTTONS(btns)                                                                    \
@@ -384,10 +384,6 @@ static zmk_mod_flags_t explicit_buttons = 0;
     }
 
 int zmk_hid_mouse_button_press(zmk_mouse_button_t button) {
-    if (button >= ZMK_HID_MOUSE_NUM_BUTTONS) {
-        return -EINVAL;
-    }
-
     explicit_button_counts[button]++;
     LOG_DBG("Button %d count %d", button, explicit_button_counts[button]);
     WRITE_BIT(explicit_buttons, button, true);
@@ -396,10 +392,6 @@ int zmk_hid_mouse_button_press(zmk_mouse_button_t button) {
 }
 
 int zmk_hid_mouse_button_release(zmk_mouse_button_t button) {
-    if (button >= ZMK_HID_MOUSE_NUM_BUTTONS) {
-        return -EINVAL;
-    }
-
     if (explicit_button_counts[button] <= 0) {
         LOG_ERR("Tried to release button %d too often", button);
         return -EINVAL;
@@ -415,8 +407,8 @@ int zmk_hid_mouse_button_release(zmk_mouse_button_t button) {
 }
 
 int zmk_hid_mouse_buttons_press(zmk_mouse_button_flags_t buttons) {
-    for (zmk_mouse_button_t i = 0; i < ZMK_HID_MOUSE_NUM_BUTTONS; i++) {
-        if (buttons & BIT(i)) {
+    for (zmk_mod_t i = 0; i < 16; i++) {
+        if (buttons & (1 << i)) {
             zmk_hid_mouse_button_press(i);
         }
     }
@@ -424,14 +416,40 @@ int zmk_hid_mouse_buttons_press(zmk_mouse_button_flags_t buttons) {
 }
 
 int zmk_hid_mouse_buttons_release(zmk_mouse_button_flags_t buttons) {
-    for (zmk_mouse_button_t i = 0; i < ZMK_HID_MOUSE_NUM_BUTTONS; i++) {
-        if (buttons & BIT(i)) {
+    for (zmk_mod_t i = 0; i < 16; i++) {
+        if (buttons & (1 << i)) {
             zmk_hid_mouse_button_release(i);
         }
     }
     return 0;
 }
-void zmk_hid_mouse_clear(void) { memset(&mouse_report.body, 0, sizeof(mouse_report.body)); }
+
+void zmk_hid_mouse_movement_set(int16_t x, int16_t y) {
+    mouse_report.body.x = x;
+    mouse_report.body.y = y;
+    LOG_DBG("Mouse movement set to 0x%02X 0x%02X ", mouse_report.body.x, mouse_report.body.y);
+}
+
+void zmk_hid_mouse_movement_update(int16_t x, int16_t y) {
+    mouse_report.body.x += x;
+    mouse_report.body.y += y;
+    LOG_DBG("Mouse movement updated to 0x%02X 0x%02X ", mouse_report.body.x, mouse_report.body.y);
+}
+
+void zmk_hid_mouse_scroll_set(int8_t x, int8_t y) {
+    mouse_report.body.scroll_x = x;
+    mouse_report.body.scroll_y = y;
+    LOG_DBG("Mouse scroll set to 0x%02X 0x%02X ", mouse_report.body.scroll_x,
+            mouse_report.body.scroll_y);
+}
+
+void zmk_hid_mouse_scroll_update(int8_t x, int8_t y) {
+    mouse_report.body.scroll_x += x;
+    mouse_report.body.scroll_y += y;
+    LOG_DBG("Mouse scroll updated to 0x%02X 0x%02X ", mouse_report.body.scroll_x,
+            mouse_report.body.scroll_y);
+}
+void zmk_hid_mouse_clear() { memset(&mouse_report.body, 0, sizeof(mouse_report.body)); }
 
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
 
