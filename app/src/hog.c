@@ -381,6 +381,29 @@ int zmk_hog_send_mouse_report(struct zmk_hid_mouse_report_body *report) {
     return 0;
 };
 
+int zmk_hog_send_mouse_report_direct(struct zmk_hid_mouse_report_body *report) {
+    struct bt_conn *conn = zmk_ble_active_profile_conn();
+    if (conn == NULL) {
+        return 1;
+    }
+
+    struct bt_gatt_notify_params notify_params = {
+        .attr = &hog_svc.attrs[13],
+        .data = report,
+        .len = sizeof(*report),
+    };
+
+    int err = bt_gatt_notify_cb(conn, &notify_params);
+    if (err) {
+        LOG_DBG("Error notifying %d", err);
+        return err;
+    }
+
+    bt_conn_unref(conn);
+
+    return 0;
+};
+
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
 
 static int zmk_hog_init(void) {
