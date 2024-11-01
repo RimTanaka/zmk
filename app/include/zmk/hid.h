@@ -9,7 +9,8 @@
 #include <zephyr/sys/util.h>
 
 #include <zephyr/usb/usb_device.h>
-#include <zephyr/usb/class/usb_hid.h>
+// #include <zephyr/usb/class/usb_hid.h>
+#include <zephyr/usb/class/hid.h>
 
 #include <zmk/keys.h>
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
@@ -41,7 +42,7 @@
 #error "Unknown keyboard report usages configuration"
 #endif
 
-#define ZMK_HID_MOUSE_NUM_BUTTONS 0x05
+#define ZMK_HID_MOUSE_NUM_BUTTONS 0x10
 
 // See https://www.usb.org/sites/default/files/hid1_11.pdf section 6.2.2.4 Main Items
 
@@ -174,12 +175,12 @@ static const uint8_t zmk_hid_report_desc[] = {
     HID_LOGICAL_MIN8(0x00),
     HID_LOGICAL_MAX8(0x01),
     HID_REPORT_SIZE(0x01),
-    HID_REPORT_COUNT(0x5),
-    HID_INPUT(ZMK_HID_MAIN_VAL_DATA | ZMK_HID_MAIN_VAL_VAR | ZMK_HID_MAIN_VAL_ABS),
+    HID_REPORT_COUNT(0x10),
+    HID_INPUT(0x02),
     // Constant padding for the last 3 bits.
-    HID_REPORT_SIZE(0x03),
-    HID_REPORT_COUNT(0x01),
-    HID_INPUT(ZMK_HID_MAIN_VAL_CONST | ZMK_HID_MAIN_VAL_VAR | ZMK_HID_MAIN_VAL_ABS),
+    HID_REPORT_SIZE(0x10),
+    HID_REPORT_COUNT(0x02),
+    HID_INPUT(0x06),
     // Some OSes ignore pointer devices without X/Y data.
     HID_USAGE_PAGE(HID_USAGE_GEN_DESKTOP),
     HID_USAGE(HID_USAGE_GD_X),
@@ -188,8 +189,8 @@ static const uint8_t zmk_hid_report_desc[] = {
     HID_LOGICAL_MIN8(-0x7F),
     HID_LOGICAL_MAX8(0x7F),
     HID_REPORT_SIZE(0x08),
-    HID_REPORT_COUNT(0x03),
-    HID_INPUT(ZMK_HID_MAIN_VAL_DATA | ZMK_HID_MAIN_VAL_VAR | ZMK_HID_MAIN_VAL_REL),
+    HID_REPORT_COUNT(0x01),
+    HID_INPUT(0x06),
     HID_END_COLLECTION,
     HID_END_COLLECTION,
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
@@ -258,9 +259,10 @@ struct zmk_hid_consumer_report {
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 struct zmk_hid_mouse_report_body {
     zmk_mouse_button_flags_t buttons;
-    int8_t d_x;
-    int8_t d_y;
-    int8_t d_wheel;
+    int16_t x;
+    int16_t y;
+    int8_t scroll_y;
+    int8_t scroll_x;
 } __packed;
 
 struct zmk_hid_mouse_report {
@@ -301,7 +303,11 @@ int zmk_hid_mouse_button_press(zmk_mouse_button_t button);
 int zmk_hid_mouse_button_release(zmk_mouse_button_t button);
 int zmk_hid_mouse_buttons_press(zmk_mouse_button_flags_t buttons);
 int zmk_hid_mouse_buttons_release(zmk_mouse_button_flags_t buttons);
-void zmk_hid_mouse_clear(void);
+void zmk_hid_mouse_movement_set(int16_t x, int16_t y);
+void zmk_hid_mouse_scroll_set(int8_t x, int8_t y);
+void zmk_hid_mouse_movement_update(int16_t x, int16_t y);
+void zmk_hid_mouse_scroll_update(int8_t x, int8_t y);
+void zmk_hid_mouse_clear();
 #endif // IS_ENABLED(CONFIG_ZMK_MOUSE)
 
 struct zmk_hid_keyboard_report *zmk_hid_get_keyboard_report(void);
