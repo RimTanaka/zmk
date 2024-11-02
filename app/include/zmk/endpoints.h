@@ -63,6 +63,8 @@ int zmk_endpoint_instance_to_index(struct zmk_endpoint_instance endpoint);
 int zmk_endpoints_select_transport(enum zmk_transport transport);
 int zmk_endpoints_toggle_transport(void);
 
+void zmk_endpoints_clear_current(void);
+
 /**
  * Gets the currently-selected endpoint.
  */
@@ -73,5 +75,3 @@ int zmk_endpoints_send_report(uint16_t usage_page);
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 int zmk_endpoints_send_mouse_report();
 #endif // IS_ENABLE(CONFIG_ZMK_MOUSE)
-
-void zmk_endpoints_clear_current(void);
